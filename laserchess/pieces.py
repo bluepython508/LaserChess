@@ -1,5 +1,7 @@
 from enum import IntEnum
 
+from PIL import Image
+
 
 class Directions(IntEnum):
     UP = 0
@@ -59,5 +61,9 @@ class PieceRelativeDirection(object):
 
 
 class Piece(object):
-    def __init__(self, direction):
+    def __init__(self, direction=Directions.UP):
         self.direction = direction
+
+
+class King(Piece):
+    image = Image.open('resources/king.png')
