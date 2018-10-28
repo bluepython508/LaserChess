@@ -74,30 +74,55 @@ class PieceMeta(type):
             Piece.types[name] = cls
 
 
-@add_metaclass(PieceMeta)
+# @add_metaclass(PieceMeta)
 class Piece(object):
     types = {}
     image = Image.Image()
 
-    def __init__(self, direction=Directions.UP, colour=None, board=None):
+    def __init__(self, direction=Directions.UP, colour=None, board=None, position=None):
         self.direction = direction
         self.colour = colour
         self.image = convert_colour(colour, self.image)
         self.board = board
+        self.position = position
 
     def after_firing(self, func, *args, **kwargs):
         self.board.after_firing(lambda: func, *args, **kwargs)
+
+    def on_laser_hit(self, direction, laser):
+        self.after_firing(self.remove)
+
+    def remove(self):
+        self.board.remove(self)
+
+    def emit(self, laser):
+        self.board.fire(laser)
 
 
 class King(Piece):
     image = Image.open("resources/king.png")
 
-    def on_laser_hit(self, direction):
+    def on_laser_hit(self, direction, laser):
         self.after_firing(self.board.turn.lose)
 
 
 class Mirror(Piece):
-    # image = Image.open("resources/mirror.png")
+    image = Image.open("resources/mirror.png")
 
-    def on_laser_hit(self):
-        pass
+    def on_laser_hit(self, direction, laser):
+        direction = direction.piece_relative
+        if direction is Directions.UP:
+            self.emit(laser.from_piece(self, to=PieceRelativeDirection(Directions.RIGHT, self)))
+        elif direction is Directions.RIGHT:
+            self.emit(laser.from_piece(self, to=PieceRelativeDirection(Directions.LEFT, self)))
+        else:
+            self.after_firing(self.remove)
+
+
+class Defender(Piece):
+    image = Image.open('resources/defender.png')
+
+    def on_laser_hit(self, direction, laser):
+        direction = direction.piece_relative
+        if direction is Directions.DOWN:
+            self.after_firing(self.remove)
