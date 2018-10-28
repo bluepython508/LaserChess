@@ -1,9 +1,12 @@
+from unittest.mock import Mock
+
 import pytest
 from laserchess.pieces import (
     Piece,
     Directions,
     PieceRelativeDirection,
     _negated_directions,
+    King,
 )
 
 directions = [
@@ -43,16 +46,15 @@ def test_direction_negate_opposite(start, expected):
     assert -start is start.opposite(), (start, start.opposite())
 
 
-@pytest.mark.parametrize('direction_int,direction', [
-    (360, Directions.UP),
-    (270, Directions.LEFT),
-    (720, Directions.UP),
-])
+@pytest.mark.parametrize(
+    "direction_int,direction",
+    [(360, Directions.UP), (270, Directions.LEFT), (720, Directions.UP)],
+)
 def test_direction_from_int(direction_int, direction):
     assert Directions.from_int(direction_int) is direction
 
 
-@pytest.mark.parametrize('piece,absolute,unexpected', directions)
+@pytest.mark.parametrize("piece,absolute,unexpected", directions)
 def test_piece_relative_from_absolute(piece, absolute, unexpected):
     if piece is Directions.UP:
         expected = absolute
@@ -61,3 +63,22 @@ def test_piece_relative_from_absolute(piece, absolute, unexpected):
     else:
         expected = -unexpected
     assert PieceRelativeDirection(absolute, Piece(piece)).piece_relative is expected
+
+
+def test_piece_registry():
+    for cls in (King,):
+        assert cls.__name__ in Piece.types and Piece.types[cls.__name__] is cls, cls
+
+
+def test_convert_image():
+    pytest.xfail("Needs implemented properly.")
+    assert 0, "Needs implemented properly."
+
+
+def test_after_firing():  # TODO: Remove mock
+    def fun():
+        pass
+
+    piece = Piece(board=Mock())
+    piece.after_firing(fun)
+    piece.board.after_firing.assert_called()

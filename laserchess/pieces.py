@@ -1,6 +1,13 @@
 from enum import IntEnum
 
 from PIL import Image
+from six import add_metaclass
+
+REPLACED_COLOUR = 255, 251, 0
+
+
+def convert_colour(colour, image):
+    return image
 
 
 class Directions(IntEnum):
@@ -60,10 +67,37 @@ class PieceRelativeDirection(object):
             return Directions.from_int(self.absolute + 90)
 
 
+class PieceMeta(type):
+    def __init__(cls, name, bases, attrs):
+        super(PieceMeta, cls).__init__(name, bases, attrs)
+        if not name == "Piece":
+            Piece.types[name] = cls
+
+
+@add_metaclass(PieceMeta)
 class Piece(object):
-    def __init__(self, direction=Directions.UP):
+    types = {}
+    image = Image.Image()
+
+    def __init__(self, direction=Directions.UP, colour=None, board=None):
         self.direction = direction
+        self.colour = colour
+        self.image = convert_colour(colour, self.image)
+        self.board = board
+
+    def after_firing(self, func, *args, **kwargs):
+        self.board.after_firing(lambda: func, *args, **kwargs)
 
 
 class King(Piece):
-    image = Image.open('resources/king.png')
+    image = Image.open("resources/king.png")
+
+    def on_laser_hit(self, direction):
+        self.after_firing(self.board.turn.lose)
+
+
+class Mirror(Piece):
+    # image = Image.open("resources/mirror.png")
+
+    def on_laser_hit(self):
+        pass
