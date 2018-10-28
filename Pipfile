@@ -6,8 +6,16 @@ name = "pypi"
 [packages]
 kivy = "*"
 six = "*"
+pillow = "*"
+pytest-cov = "*"
 
 [dev-packages]
+pytest = "*"
+black = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true
